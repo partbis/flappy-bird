@@ -30,7 +30,7 @@ rotatedPipe = rotatedPipe1
 pipe = pipe3
 bird = bird1
 
-red = (255,0,0)
+red = (255, 0, 0)
 
 choice_list = [1, 2]
 
@@ -58,7 +58,7 @@ pygame.display.set_caption("Flappy Bird")
 
 def get_highest_score():
 
-    with open("highest_score.txt","r") as f:
+    with open("highest_score.txt", "r") as f:
         return f.read()
 
 
@@ -70,7 +70,6 @@ class Game:
         self.birdX = 100
         self.birdY = 100
 
-        #        self.pipesX = [width, width+200, width+400, width+600, width+800, width+1000, width+1200]
         self.rotated_pipe = self.pipe_color_r()
         self.pipe = self.pipe_color()
         self.pipesX = [width, width + 400, width + 800, width + 1200]
@@ -81,19 +80,26 @@ class Game:
         self.pipeVel = 0
         self.ground1X = 100
         self.ground1bX = 1050
-        self.trainX = 650
+        self.trainX = -1300
         self.bridgeVel = 0
+        self.trainVel = 0
         self.flap = 0
         self.score = 0
         self.rotateAngle = 0
         self.is_game_over = False
         self.playSound = True
+        self.background_x = 0
+        self.background_y = 0
+        self.background_x_vel = 0
+        self.ground2_x = 0
+        self.ground2_y = 665
+        self.ground2_x_vel = 0
 
     def moving_pipe(self):
 
-        self.trainX += -self.bridgeVel * 4
-        if self.trainX < -605:
-            self.trainX = width + 100
+        self.trainX += self.trainVel * 3
+        if self.trainX > width + 1300:
+            self.trainX = -650
 
         self.ground1X += -self.bridgeVel * 3
         self.ground1bX += -self.bridgeVel * 3
@@ -112,6 +118,14 @@ class Game:
                 self.pipesX[i] = width + 100
                 self.lowerPipeY[i] = self.random_pipe()
                 self.upperPipeY[i] = self.random_rotated_pipe()
+
+    def moving_background(self, background_x, background_y, my_background):
+        screen.blit(my_background, (background_x, background_y))
+        screen.blit(my_background, (background_x + width, background_y))
+
+    def moving_ground2(self, ground2_x, ground2_y, my_ground2):
+        screen.blit(my_ground2, (ground2_x, ground2_y))
+        screen.blit(my_ground2, (ground2_x + width, ground2_y))
 
     @staticmethod
     def random_pipe():
@@ -176,8 +190,11 @@ class Game:
             self.screen_text("Press Enter To Play Again", (255, 255, 255), 400, 600, 48, "Fixedsys", bold=True)
             self.pipeVel = 0
             self.bridgeVel = 0
+            self.trainVel = 0
             self.flap = 0
             self.rotateAngle = -90
+            self.background_x_vel = 0
+            self.ground2_x_vel = 0
             if self.playSound:
                 pygame.mixer.Channel(1).play(hit)
                 self.playSound = False
@@ -207,6 +224,7 @@ class Game:
                             self.state = True
                             self.pipeVel = 5
                             self.bridgeVel = 2
+                            self.trainVel = 2
                             self.gravity = 5
                             self.flap = 18
                             self.rotateAngle = 20
@@ -214,10 +232,12 @@ class Game:
                         if self.score > 10:
                             self.pipeVel = 8
                             self.bridgeVel = 3
+                            self.trainVel = 2
 
                         if self.score > 15:
                             self.pipeVel = 10
                             self.bridgeVel = 4
+                            self.trainVel = 3
 
                     if event.key == pygame.K_RETURN:
                         self.state = True
@@ -233,9 +253,12 @@ class Game:
                         self.is_game_over = False
                         self.pipeVel = 0
                         self.bridgeVel = 0
+                        self.trainVel = 0
                         self.flap = 18
                         self.gravity = 0
                         self.rotateAngle = 20
+                        self.background_x_vel = 5
+                        self.ground2_x_vel = 8
 
                         self.state = False
 
@@ -243,7 +266,10 @@ class Game:
                         self.state = True
 
             # blitting images
-            screen.blit(background, (0, 0))
+#            screen.blit(background, (0, 0))
+
+            self.moving_background(self.background_x, self.background_y, background)
+
 
             for i in range(0, 4):
 
@@ -266,7 +292,8 @@ class Game:
             screen.blit(ground1b, (self.ground1bX, 235))
             #   screen.blit(ground1, (self.ground1X + 635, 235))
 
-            screen.blit(ground2, (0, 665))
+            # screen.blit(ground2, (0, 665))
+            self.moving_ground2(self.ground2_x, self.ground2_y, ground2)
 
             #            self.screenText("Flappy Bird Game", (255, 255, 255), 400, 600, 48, "Fixedsys", bold=True)
 
@@ -303,6 +330,18 @@ class Game:
 
             clock.tick(fps)
 
+            if not self.is_game_over:
+                self.background_x_vel = 1
+                # moving background
+                self.background_x += -self.background_x_vel
+                if self.background_x <= -width:
+                    self.background_x = 0
+
+                self.ground2_x_vel = 6
+                self.ground2_x += -self.ground2_x_vel
+                if self.ground2_x <= -width:
+                    self.ground2_x = 0
+
 
 class Menu:
     def __init__(self):
@@ -330,6 +369,9 @@ class Menu:
         while run:
 
             self.menuscreen.blit(background, (0, 0))
+            self.menuscreen.blit(ground1, (100, 235))
+            self.menuscreen.blit(ground2, (0, 665))
+
 
             self.menufont = pygame.font.SysFont("Fixedsys", 60, bold=True)
             screen_text1 = self.menufont.render("Flappy Bird Game", True, (255, 255, 255))
