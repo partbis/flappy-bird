@@ -374,7 +374,7 @@ class Menu:
 
 
             self.menufont = pygame.font.SysFont("Fixedsys", 60, bold=True)
-            screen_text1 = self.menufont.render("Flappy Bird Game", True, (255, 255, 255))
+            screen_text1 = self.menufont.render("Flappy Bird Game", True, (0, 0, 0))
             screen.blit(screen_text1, (380, 100))
 
             if self.start_button.draw(self.menuscreen):
